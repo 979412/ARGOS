@@ -1,1 +1,19 @@
+# Python keş faylları (Lüzumsuzlar)
+__pycache__/
+*.py[cod]
+*$py.class
 
+# Virtual mühit (Əgər istifadə edirsənsə)
+venv/
+env/
+.venv/
+
+# Streamlit-in müvəqqəti faylları
+.streamlit/config.toml
+
+# Təhlükəsizlik: API açarları (ƏN VACİBİ)
+.env
+
+# Windows-un yaratdığı sistem faylları
+Thumbs.db
+desktop.ini
