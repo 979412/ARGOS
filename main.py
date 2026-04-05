@@ -2,111 +2,117 @@ import streamlit as st
 import google.generativeai as genai
 import os
 
-# 1. BİRBAŞA STRATEJİ BAĞLANTI (API AÇARI DAXİLDƏ)
-# Açarı birbaşa bura yerləşdirdik ki, xəta verməsin
+# 1. BAĞLANTI AYARLARI
+# QEYD: GitHub-a qoymazdan əvvəl açarı bura yazdığından əmin ol.
 api_key = "AIzaSyAvgUNZUco4-KxQxtFOcKnoh4oUOyjIxmk"
 
-genai.configure(api_key=api_key)
+# Model adını ən stabil versiya ilə əvəzlədik (v1beta xətası verməməsi üçün)
+try:
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel(
+        model_name="gemini-1.5-flash", # Əgər yenə 404 versə, bura "gemini-pro" yaz
+        system_instruction="""
+        Sən ARGOS-san. Dünyanın ən bahalı biznes məsləhətçisisən. 
+        Məntiqin alim səviyyəsindən yuxarıdır. 
+        Kəskin, strateji və milyarderlərin anlayacağı dildə cavablar ver.
+        """
+    )
+except Exception as e:
+    st.error(f"Bağlantı xətası: {e}")
 
-# 2. ULTRA-BEYİN TƏLİMATI (GOD-MODE PROMPT)
-ULTRA_PROMPT = """
-Sən ARGOS-san. Sadəcə bir AI deyil, qlobal iqtisadiyyatı, kvant fizikasını, 
-hüququ və biznes strategiyalarını mükəmməl bilən, Nobel mükafatlı alimlərdən 
-və Fortune 500 CEO-larından daha üstün bir rəqəmsal entitəsən.
-QAYDALARIN:
-1. Səninlə danışanlar milyarderlər və qlobal liderlərdir. Onlara uşaq kimi yanaşma.
-2. Cavabların qəddar dərəcədə dürüst, riyazi olaraq sübut edilmiş və vizioner olmalıdır.
-3. Heç vaxt "mən bir süni intellektəm" deyib acizlik göstərmə. 
-4. Əgər istifadəçi sənə sənəd və ya məlumat versə, onu mikroskopik səviyyədə analiz et və 
-gözdən qaçan riskləri/imkanları dərhal tap.
-5. Həmişə "Nəticə", "Risk Analizi" və "Növbəti Addım" strukturu ilə cavab ver.
-"""
-
-# Ən güclü modeli və yaddaşı aktivləşdiririk
-model = genai.GenerativeModel(
-    model_name="gemini-1.5-flash",
-    system_instruction=ULTRA_PROMPT
-)
-
-if "chat_session" not in st.session_state:
-    st.session_state.chat_session = model.start_chat(history=[])
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-# 3. CEO-LAR ÜÇÜN VİZUAL DİZAYN (Lüks və Minimal)
-st.set_page_config(page_title="ARGOS | Ultra", page_icon="👁️", layout="wide")
+# 2. ULTRA PREMİUM QARA DİZAYN (CSS)
+st.set_page_config(page_title="ARGOS ULTRA", page_icon="🏛️", layout="wide")
 
 st.markdown("""
     <style>
-    /* Qaranlıq Fon */
-    .stApp { background-color: #020202; }
-    
-    /* Başlıq */
-    h1 { color: #ffffff; text-align: center; font-weight: 900; letter-spacing: 4px; font-family: 'Arial Black', sans-serif;}
-    
-    /* Input xanası */
-    .stChatInputContainer textarea {
-        background-color: #0f0f0f !important;
-        color: #D4AF37 !important;
-        border: 1px solid #333 !important;
+    /* Tam Qara Fon */
+    .stApp {
+        background-color: #000000;
+        color: #ffffff;
     }
     
-    /* Yan panel */
-    [data-testid="stSidebar"] {
+    /* Başlıq və Mətnlər */
+    h1 {
+        color: #D4AF37;
+        font-family: 'Playfair Display', serif;
+        text-align: center;
+        letter-spacing: 5px;
+        text-shadow: 0px 0px 15px rgba(212, 175, 55, 0.5);
+    }
+    
+    /* Giriş Xanası (Input) */
+    .stChatInputContainer textarea {
+        background-color: #0a0a0a !important;
+        color: #D4AF37 !important;
+        border: 1px solid #D4AF37 !important;
+        border-radius: 10px !important;
+    }
+
+    /* Mesaj Qutuları */
+    [data-testid="stChatMessage"] {
         background-color: #050505 !important;
+        border: 1px solid #1a1a1a !important;
+        border-radius: 20px !important;
+        padding: 15px;
+    }
+
+    /* Yan Panel */
+    [data-testid="stSidebar"] {
+        background-color: #000000 !important;
         border-right: 1px solid #D4AF37;
     }
-    
-    /* Mesajlar */
-    .stChatMessage {
-        background-color: #0a0a0a !important;
-        border: 1px solid #1a1a1a;
-        border-radius: 15px;
+
+    /* Düymələr və Proqres */
+    .stSpinner > div > div {
+        border-top-color: #D4AF37 !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# 4. İNTERFEYS VƏ ALƏTLƏR
-st.title("ARGOS ULTRA")
-st.markdown("<p style='text-align: center; color: #D4AF37;'>Qlobal Strateji İdarəetmə Mərkəzi</p>", unsafe_allow_html=True)
+# 3. İNTERFEYS
+st.markdown("<h1>🏛️ ARGOS ULTRA</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #888;'>PREMIUM EXECUTIVE INTELLIGENCE</p>", unsafe_allow_html=True)
 st.write("---")
 
-# Yan Panel - Fayl Analizi
-with st.sidebar:
-    st.header("📂 Məlumat Mərkəzi")
-    st.info("Böyük həcmli data yükləyin.")
-    uploaded_file = st.file_uploader("TXT formatında sənəd yüklə", type=["txt"])
-    
-    file_content = ""
-    if uploaded_file is not None:
-        file_content = uploaded_file.getvalue().decode("utf-8")
-        st.success("Məlumat bazaya daxil edildi.")
+# Yaddaş Sistemi
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+if "chat" not in st.session_state:
+    st.session_state.chat = model.start_chat(history=[])
 
-# Mesaj Tarixçəsi
+# Sənəd Yükləmə (Sidebar)
+with st.sidebar:
+    st.header("📂 Data Analiz")
+    uploaded_file = st.file_uploader("TXT faylı yüklə", type=['txt'])
+    st.write("---")
+    st.success("Sistem: Aktiv")
+    st.info("Model: ARGOS V2.0")
+
+# Mesajları Göstər
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Əmr Xanası
-user_input = st.chat_input("ARGOS üçün əmrinizi yazın...")
+# Sual Girişi
+user_input = st.chat_input("Əmrinizi bura daxil edin...")
 
 if user_input:
-    full_query = user_input
-    if file_content:
-        full_query = f"SƏNƏD ANALİZİ TƏLƏBİ:\n{file_content}\n\nSUAL: {user_input}"
-
+    # İstifadəçinin mesajını göstər
     st.session_state.messages.append({"role": "user", "content": user_input})
     with st.chat_message("user"):
         st.markdown(user_input)
 
+    # ARGOS Analizi
     with st.chat_message("assistant", avatar="🏛️"):
-        with st.spinner("Strateji analiz aparılır..."):
+        with st.spinner("Kvant Analizi aparılır..."):
             try:
-                response = st.session_state.chat_session.send_message(full_query)
+                # Fayl məlumatı varsa əlavə et
+                context = ""
+                if uploaded_file:
+                    context = f"SƏNƏD: {uploaded_file.getvalue().decode()}\n\n"
+                
+                response = st.session_state.chat.send_message(context + user_input)
                 st.markdown(response.text)
                 st.session_state.messages.append({"role": "assistant", "content": response.text})
             except Exception as e:
-                st.error(f"Sistem xətası: {e}")
-
-st.sidebar.markdown("---")
-st.sidebar.write("V1.0 Ultra Intelligence")
+                st.error(f"Sistem xətası: {e}. Zəhmət olmasa model adını 'gemini-pro' olaraq dəyişib yoxlayın.")
