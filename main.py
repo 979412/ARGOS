@@ -2,55 +2,75 @@ import streamlit as st
 import google.generativeai as genai
 import os
 
-# 1. STRATEJİ BAĞLANTI (BİRBAŞA REJİM)
-# API Açarın (Dəyişməmişik, olduğu kimi qalır)
+# 1. STRATEJİ BAĞLANTI
 api_key = "AIzaSyAvgUNZUco4-KxQxtFOcKnoh4oUOyjIxmk"
-
-# Google AI Konfiqurasiyası
 genai.configure(api_key=api_key)
 
-# 2. ULTRA PREMİUM DİZAYN (CSS)
-st.set_page_config(page_title="ARGOS ULTRA", page_icon="🏛️", layout="wide")
+# 2. YENİ İŞIQLI VƏ PREMİUM DİZAYN (Gümüşü-Mavi)
+st.set_page_config(page_title="ARGOS | Executive", page_icon="🏛️", layout="wide")
 
 st.markdown("""
     <style>
-    .stApp { background-color: #000000; color: #ffffff; }
-    h1 { color: #D4AF37; text-align: center; font-family: 'Arial Black'; letter-spacing: 5px; }
-    .stChatInputContainer textarea { 
-        background-color: #0a0a0a !important; 
-        color: #D4AF37 !important; 
-        border: 1px solid #D4AF37 !important; 
-        border-radius: 10px;
+    /* Fon: İşıqlı gümüşü/boz gradient */
+    .stApp {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        color: #1a1a1a;
     }
-    [data-testid="stChatMessage"] { 
-        background-color: #050505 !important; 
-        border: 1px solid #1a1a1a !important; 
-        border-radius: 15px !important; 
+    
+    /* Başlıq: Tünd göy və ciddi */
+    h1 {
+        color: #1e3a8a;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        text-align: center;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-top: -50px;
     }
-    [data-testid="stSidebar"] { 
-        background-color: #000000 !important; 
-        border-right: 1px solid #D4AF37; 
+
+    /* Giriş Xanası: Təmiz ağ və kölgəli */
+    .stChatInputContainer textarea {
+        background-color: #ffffff !important;
+        color: #1a1a1a !important;
+        border: 2px solid #1e3a8a !important;
+        border-radius: 15px !important;
+        box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+    }
+
+    /* Mesaj Qutuları */
+    [data-testid="stChatMessage"] {
+        background-color: rgba(255, 255, 255, 0.8) !important;
+        border-radius: 15px !important;
+        border: 1px solid #d1d5db !important;
+        margin-bottom: 15px;
+        box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
+    }
+
+    /* Yan Panel */
+    [data-testid="stSidebar"] {
+        background-color: #ffffff !important;
+        border-right: 2px solid #1e3a8a;
+    }
+
+    /* Mətn rəngləri */
+    .stMarkdown p {
+        color: #2d3748;
+        line-height: 1.6;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. MODELİN HAZIRLANMASI (XƏTASIZ VERSİYA)
+# 3. MODELİN YÜKLƏNMƏSİ
 @st.cache_resource
-def load_argos_model():
-    # Biz burada 1.5-flash modelini çağırırıq
-    return genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
-        system_instruction="Sən ARGOS-san. Dahi strateq və alimsən. Cavabların qısa, kəskin və elit olmalıdır."
-    )
+def load_model():
+    # 404 xətası almamamaq üçün birbaşa ən stabil modeli seçirik
+    return genai.GenerativeModel('gemini-pro')
 
-try:
-    model = load_argos_model()
-except:
-    # Əgər 1.5-flash işləməsə, ehtiyat olaraq gemini-pro-nu işə salırıq
-    model = genai.GenerativeModel('gemini-pro')
+model = load_model()
 
-# 4. İNTERFEYS
-st.markdown("<h1>🏛️ ARGOS ULTRA</h1>", unsafe_allow_html=True)
+# 4. İNTERFEYS QURULUŞU
+st.markdown("<h1>🏛️ ARGOS EXECUTIVE</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #4a5568;'>ADVANCED STRATEGIC INTELLIGENCE</p>", unsafe_allow_html=True)
 st.write("---")
 
 if "messages" not in st.session_state:
@@ -61,32 +81,31 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Əmr Girişi
-user_input = st.chat_input("Əmrinizi bura daxil edin...")
+# Sual Girişi
+user_input = st.chat_input("Strategiyanızı bura daxil edin...")
 
 if user_input:
-    # İstifadəçi mesajını göstər
     st.session_state.messages.append({"role": "user", "content": user_input})
     with st.chat_message("user"):
         st.markdown(user_input)
 
-    # ARGOS Cavabı
     with st.chat_message("assistant", avatar="🏛️"):
-        with st.spinner("Strateji analiz..."):
+        with st.spinner("Analiz olunur..."):
             try:
-                # Sualı göndər
+                # Cavabı alırıq
                 response = model.generate_content(user_input)
-                
-                # Cavabı göstər və yaddaşa yaz
                 st.markdown(response.text)
                 st.session_state.messages.append({"role": "assistant", "content": response.text})
             except Exception as e:
-                # Əgər hələ də model tapılmasa, bu dəfə çox konkret xəta göstərəcək
-                st.error(f"Sistem xətası: {str(e)}")
-                st.info("İpucu: API açarının aktivliyini yoxlayın.")
+                st.error(f"Sistem xətası: {e}")
 
 # Yan Panel
 with st.sidebar:
-    st.title("Sistem")
-    st.success("Kitabxanalar: OK (0.8.6)")
-    st.info("Mühərrik: ARGOS Engine")
+    st.header("📊 Sistem Paneli")
+    st.write("İstifadəçi: **Admin**")
+    st.write("Vəziyyət: **Aktiv**")
+    st.write("Mühərrik: **Gemini Pro**")
+    st.write("---")
+    if st.button("Söhbəti Təmizlə"):
+        st.session_state.messages = []
+        st.rerun()
